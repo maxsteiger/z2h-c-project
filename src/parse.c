@@ -69,7 +69,8 @@ int validate_db_header(int fd, struct dbheader_t **headerOut) {
         return STATUS_ERROR;
     }
 
-    return 0;
+    *headerOut = header;
+    return STATUS_SUCCESS;
 }
 
 int read_employees(int fd, struct dbheader_t *dbhdr, struct employee_t **employeesOut) { return 0; }
