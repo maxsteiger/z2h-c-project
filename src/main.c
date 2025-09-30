@@ -74,8 +74,8 @@ int main(int argc, char *argv[]) {
     output_file(dbfd, dbhdr, employees);
 
     free(dbhdr);
-    if (dbfd != -1) {
+    /* if (dbfd != -1) {
         close(dbfd);
-    }
+    } */
     return 0;
 }
