@@ -1,6 +1,8 @@
 #include <getopt.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #include "common.h"
 #include "file.h"
@@ -71,5 +73,9 @@ int main(int argc, char *argv[]) {
 
     output_file(dbfd, dbhdr, employees);
 
+    free(dbhdr);
+    if (dbfd != -1) {
+        close(dbfd);
+    }
     return 0;
 }

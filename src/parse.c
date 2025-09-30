@@ -93,8 +93,12 @@ int output_file(int fd, struct dbheader_t *dbhdr, struct employee_t *employees) 
 
     lseek(fd, 0, SEEK_SET);
 
-    write(fd, dbhdr, sizeof(struct dbheader_t));
-    free(dbhdr);
+    if ((write(fd, dbhdr, sizeof(struct dbheader_t)) == -1)) {
+        perror("write");
+        printf("Unable to write to file\n");
+        free(dbhdr);
+        return STATUS_ERROR;
+    }
 
     return STATUS_SUCCESS;
 }
