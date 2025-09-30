@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
     bool newfile = false;
     int c;
 
-    int dbfd = -1;
+    int dbfd = STATUS_ERROR;
     struct dbheader_t *dbhdr = NULL;
     struct employee_t *employees = NULL;
 
@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
             printf("Unknown option -%c\n", c);
             break;
         default:
-            return -1;
+            return STATUS_ERROR;
         }
     }
 
@@ -50,32 +50,32 @@ int main(int argc, char *argv[]) {
         dbfd = create_db_file(filepath);
         if (dbfd == STATUS_ERROR) {
             printf("Unable to create database file\n");
-            return -1;
+            return STATUS_ERROR;
         }
 
         if (create_db_header(&dbhdr) == STATUS_ERROR) {
             printf("Failed to create database header\n");
-            return -1;
+            return STATUS_ERROR;
         }
 
     } else {
         dbfd = open_db_file(filepath);
         if (dbfd == STATUS_ERROR) {
             printf("Unable to open database file\n");
-            return -1;
+            return STATUS_ERROR;
         }
 
         if (validate_db_header(dbfd, &dbhdr) == STATUS_ERROR) {
             printf("Failed to validate database header\n");
-            return -1;
+            return STATUS_ERROR;
         }
     }
 
     output_file(dbfd, dbhdr, employees);
 
     free(dbhdr);
-    /* if (dbfd != -1) {
+    if (dbfd != STATUS_ERROR) {
         close(dbfd);
-    } */
+    }
     return 0;
 }
