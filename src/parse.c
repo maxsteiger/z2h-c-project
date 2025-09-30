@@ -9,10 +9,10 @@
 #include "common.h"
 #include "parse.h"
 
-int create_db_header(int fd, struct dbheader_t **headerOut) {
+int create_db_header(struct dbheader_t **headerOut) {
     // allocate & init memory the size of 1 member of struct dbheader_t which allows us to return the pointer to allocated space
     struct dbheader_t *header = calloc(1, sizeof(struct dbheader_t));
-    if (header == -1) {
+    if (header == NULL) {
         printf("Malloc failed to create db header\n");
         return STATUS_ERROR;
     }
@@ -32,7 +32,7 @@ int validate_db_header(int fd, struct dbheader_t **headerOut) {
     }
 
     struct dbheader_t *header = calloc(1, sizeof(struct dbheader_t));
-    if (header == -1) {
+    if (header == NULL) {
         printf("Malloc failed to create db header\n");
         return STATUS_ERROR;
     }
@@ -75,7 +75,7 @@ int validate_db_header(int fd, struct dbheader_t **headerOut) {
 
 int read_employees(int fd, struct dbheader_t *dbhdr, struct employee_t **employeesOut) { return 0; }
 
-void output_file(int fd, struct dbheader_t *dbhdr) {
+void output_file(int fd, struct dbheader_t *dbhdr, struct employee_t *employees) {
     if (fd < 0) {
         printf("Bad file descriptor\n");
         return;

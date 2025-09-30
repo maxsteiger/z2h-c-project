@@ -21,6 +21,7 @@ int main(int argc, char *argv[]) {
 
     int dbfd = -1;
     struct dbheader_t *dbhdr = NULL;
+    struct employee_t *employees = {0};
 
     while ((c = getopt(argc, argv, "nf:")) != -1) {
         switch (c) {
@@ -50,7 +51,7 @@ int main(int argc, char *argv[]) {
             return -1;
         }
 
-        if (create_db_header(dbfd, &dbhdr) == STATUS_ERROR) {
+        if (create_db_header(&dbhdr) == STATUS_ERROR) {
             printf("Failed to create database header\n");
             return -1;
         }
@@ -68,10 +69,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    printf("Newfile: %d\n", newfile);
-    printf("Filepath: %s\n", filepath);
-
-    output_file(dbfd, dbhdr);
+    output_file(dbfd, dbhdr, employees);
 
     return 0;
 }
