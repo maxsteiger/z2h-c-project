@@ -15,6 +15,7 @@ int create_db_header(struct dbheader_t **headerOut) {
     if (header == NULL) {
         perror("calloc");
         printf("Malloc failed to create db header\n");
+        free(header);
         return STATUS_ERROR;
     }
 
@@ -37,6 +38,7 @@ int validate_db_header(int fd, struct dbheader_t **headerOut) {
     if (header == NULL) {
         perror("calloc");
         printf("Malloc failed to create db header\n");
+        free(header);
         return STATUS_ERROR;
     }
 
@@ -92,6 +94,7 @@ int output_file(int fd, struct dbheader_t *dbhdr, struct employee_t *employees) 
     lseek(fd, 0, SEEK_SET);
 
     write(fd, dbhdr, sizeof(struct dbheader_t));
+    free(dbhdr);
 
     return STATUS_SUCCESS;
 }
