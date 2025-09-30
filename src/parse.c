@@ -13,7 +13,9 @@ int create_db_header(struct dbheader_t **headerOut) {
     // allocate & init memory the size of 1 member of struct dbheader_t which allows us to return the pointer to allocated space
     struct dbheader_t *header = calloc(1, sizeof(struct dbheader_t));
     if (header == NULL) {
+        perror("calloc");
         printf("Malloc failed to create db header\n");
+        free(header);
         return STATUS_ERROR;
     }
     header->version = 0x1;
@@ -33,6 +35,7 @@ int validate_db_header(int fd, struct dbheader_t **headerOut) {
 
     struct dbheader_t *header = calloc(1, sizeof(struct dbheader_t));
     if (header == NULL) {
+        perror("calloc");
         printf("Malloc failed to create db header\n");
         return STATUS_ERROR;
     }
