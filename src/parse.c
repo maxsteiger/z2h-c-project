@@ -10,9 +10,6 @@
 #include "parse.h"
 
 int create_db_header(struct dbheader_t **headerOut) {
-    if (*headerOut == NULL) {
-        return STATUS_ERROR;
-    }
     // allocate & init memory the size of 1 member of struct dbheader_t which allows us to return the pointer to allocated space
     struct dbheader_t *header = calloc(1, sizeof(struct dbheader_t));
     if (header == NULL) {
