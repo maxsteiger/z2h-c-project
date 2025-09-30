@@ -1,1 +1,10 @@
 .vscode/
+
+# Object files
+*.o
+
+# DB file
+*.db
+
+# Compiled executables
+/bin/
