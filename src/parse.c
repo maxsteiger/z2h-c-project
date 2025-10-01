@@ -82,7 +82,41 @@ int validate_db_header(int fd, struct dbheader_t **headerOut) {
     return STATUS_SUCCESS;
 }
 
-// int read_employees(int fd, struct dbheader_t *dbhdr, struct employee_t **employeesOut) { return 0; }
+int read_employees(int fd, struct dbheader_t *dbhdr, struct employee_t **employeesOut) {
+    if (fd < 0) {
+        printf("Bad file descriptor\n");
+        return STATUS_ERROR;
+    }
+
+    int count = dbhdr->count;
+
+    struct employee_t *employees = calloc(count, sizeof(struct employee_t));
+    if (employees == NULL) {
+        perror("calloc");
+        printf("Malloc failed\n");
+        return STATUS_ERROR;
+    }
+
+    if ((read(fd, employees, count * sizeof(struct employee_t)) == -1)) {
+        perror("read");
+        printf("Couldn't read file");
+        return STATUS_ERROR;
+    }
+
+    for (int i = 0; i < count; i++) {
+        employees[i].hours = ntohl(employees[i].hours);
+    }
+
+    *employeesOut = employees;
+
+    return STATUS_SUCCESS;
+}
+
+int add_employees(struct dbheader_t *dbhdr, struct employee_t *employees, char *addstring) {
+
+    printf("%s\n", addstring);
+    return 0;
+}
 
 int output_file(int fd, struct dbheader_t *dbhdr, struct employee_t *employees) {
     if (fd < 0) {
