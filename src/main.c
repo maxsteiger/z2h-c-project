@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
             return STATUS_ERROR;
         }
 
-        if (add_employees(dbhdr, employees, addstring) == STATUS_ERROR) {
+        if (add_employee(dbhdr, employees, addstring) == STATUS_ERROR) {
             printf("Unable to add employee\n");
             free(dbhdr);
             free(employees);
