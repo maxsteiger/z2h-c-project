@@ -3,6 +3,6 @@
 
 int create_db_file(char *filename);
 int open_db_file(char *filename);
-int close_db_file(int *file);
+int close_db_file(int file);
 
 #endif

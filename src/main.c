@@ -12,6 +12,7 @@ void print_usage(char *argv[]) {
     printf("Usage: %s -n -f <database file>\n", argv[0]);
     printf("\t -n  - create new database file\n");
     printf("\t -f  - (required) path to database file\n");
+    printf("\t -a  - add new employee <name,adress,workhours>\n");
     return;
 }
 
@@ -23,8 +24,6 @@ int main(int argc, char *argv[]) {
     int c;
 
     int dbfd = -1;
-    struct dbheader_t *dbhdr = NULL;
-    struct employee_t *employees = NULL;
 
     while ((c = getopt(argc, argv, "nf:a:")) != -1) {
         switch (c) {
@@ -38,8 +37,8 @@ int main(int argc, char *argv[]) {
             addstring = optarg;
             break;
         case '?':
-            printf("Unknown option -%c\n", c);
-            break;
+            print_usage(argv);
+            return STATUS_ERROR;
         default:
             return STATUS_ERROR;
         }
@@ -48,7 +47,11 @@ int main(int argc, char *argv[]) {
     if (filepath == NULL) {
         printf("Filepath is required\n");
         print_usage(argv);
+
+        return STATUS_ERROR;
     }
+
+    struct dbheader_t *dbheader = NULL;
 
     if (newfile) {
         dbfd = create_db_file(filepath);
@@ -57,8 +60,9 @@ int main(int argc, char *argv[]) {
             return STATUS_ERROR;
         }
 
-        if (create_db_header(&dbhdr) == STATUS_ERROR) {
+        if (create_db_header(&dbheader) == STATUS_ERROR) {
             printf("Failed to create database header\n");
+            close_db_file(dbfd);
             return STATUS_ERROR;
         }
 
@@ -69,42 +73,46 @@ int main(int argc, char *argv[]) {
             return STATUS_ERROR;
         }
 
-        if (validate_db_header(dbfd, &dbhdr) == STATUS_ERROR) {
+        if (validate_db_header(dbfd, &dbheader) == STATUS_ERROR) {
             printf("Failed to validate database header\n");
-            free(dbhdr);
+            close_db_file(dbfd);
+            // free(dbheader);
             return STATUS_ERROR;
         }
     }
 
-    if (read_employees(dbfd, dbhdr, &employees) == STATUS_ERROR) {
+    struct employee_t *employees = NULL;
+
+    if (read_employees(dbfd, dbheader, &employees) == STATUS_ERROR) {
         printf("Failed to read employees\n");
-        free(dbhdr);
-        free(employees);
+        close_db_file(dbfd);
+        free(dbheader);
+        // free(employees);
         return STATUS_ERROR;
     }
 
     if (addstring != NULL) {
 
-        if (add_employee(dbhdr, &employees, addstring) == STATUS_ERROR) {
+        if (add_employee(dbheader, &employees, addstring) == STATUS_ERROR) {
             printf("Unable to add employee: %s\n", addstring);
-            free(dbhdr);
-            free(employees);
+            // free(dbheader);
+            // free(employees);
             return STATUS_ERROR;
         }
     }
 
-    if (output_file(dbfd, dbhdr, employees) == STATUS_ERROR) {
+    if (output_file(dbfd, dbheader, employees) == STATUS_ERROR) {
         printf("Unable to create output file\n");
-        free(dbhdr);
-        free(employees);
+        // free(dbheader);
+        // free(employees);
         return STATUS_ERROR;
     }
 
     if (dbfd != -1) {
-        close_db_file(&dbfd);
+        close_db_file(dbfd);
     }
 
-    free(dbhdr);
+    free(dbheader);
     free(employees);
 
     return STATUS_SUCCESS;
