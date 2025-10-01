@@ -148,11 +148,17 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t **employeesOut, cha
 
     dbhdr->count++; // increment "count" to make space for a new employee
 
-    struct employee_t *employees;
+    /* struct employee_t *employees;
     if ((employees = reallocarray(*employeesOut, dbhdr->count, (sizeof(struct employee_t)))) == NULL) {
         perror("reallocarray");
         printf("Unable to reallocate space for new employee");
 
+        return STATUS_ERROR;
+    } */
+
+    struct employee_t *employees = realloc(*employeesOut, sizeof(struct employee_t) * dbhdr->count);
+    if (employees == NULL) {
+        printf("Error realoccing database in memory\n");
         return STATUS_ERROR;
     }
 
