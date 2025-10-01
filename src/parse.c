@@ -87,7 +87,7 @@ int validate_db_header(int fd, struct dbheader_t **headerOut) {
 int add_employee(struct dbheader_t *dbhdr, struct employee_t **employeesOut, char *addstring) {
 
     // do I need to check if *employeesOut == NULL?
-    if (employeesOut == NULL) {
+    if (employeesOut == NULL || *employeesOut == NULL) {
         printf("Illegal employees pointer\n");
         return STATUS_ERROR;
     }
@@ -116,12 +116,6 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t **employeesOut, cha
         return STATUS_ERROR;
     }
 
-    /* struct employee_t *newEmployee = *employeesOut;
-    if (newEmployee == NULL) {
-        printf("Idk what but something failed\n");
-        return STATUS_ERROR;
-    } */
-
     char *name, *addr, *hours;
 
     if ((name = strtok(addstring, DELIMITER)) == NULL) {
@@ -136,11 +130,6 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t **employeesOut, cha
         printf("Hours invalid\n");
         return STATUS_ERROR;
     }
-
-    /* if (dbhdr->count == 0) {
-        printf("Something is fucky\n");
-        return STATUS_ERROR;
-    } */
 
     struct employee_t *employees;
     dbhdr->count++; // increment "count" to make space for a new employee
