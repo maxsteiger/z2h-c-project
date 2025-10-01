@@ -20,7 +20,6 @@ int create_db_header(struct dbheader_t **headerOut) {
     if (header == NULL) {
         perror("calloc");
         printf("Malloc failed to create db header\n");
-        free(header);
         return STATUS_ERROR;
     }
 
@@ -35,7 +34,7 @@ int create_db_header(struct dbheader_t **headerOut) {
 
 int validate_db_header(int fd, struct dbheader_t **headerOut) {
     if (headerOut == NULL) {
-        printf("Emptry header pointer\n");
+        printf("Passed empty header pointer\n");
         return STATUS_ERROR;
     }
 
@@ -65,11 +64,13 @@ int validate_db_header(int fd, struct dbheader_t **headerOut) {
 
     if (header->version != 1) {
         printf("Improper header version\n");
+        free(header);
         return STATUS_ERROR;
     }
 
     if (header->magic != HEADER_MAGIC) {
         printf("Improper header magic\n");
+        free(header);
         return STATUS_ERROR;
     }
 
@@ -77,6 +78,7 @@ int validate_db_header(int fd, struct dbheader_t **headerOut) {
     fstat(fd, &dbstat);
     if (header->filesize != dbstat.st_size) {
         printf("Corrupt database\n");
+        free(header);
         return STATUS_ERROR;
     }
 
@@ -262,6 +264,8 @@ int output_file(int fd, struct dbheader_t *dbhdr, struct employee_t *employees) 
             return STATUS_ERROR;
         }
     }
+
+    ftruncate(fd, sizeof(struct dbheader_t) + sizeof(struct employee_t) * realcount);
 
     return STATUS_SUCCESS;
 }
