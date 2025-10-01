@@ -34,6 +34,11 @@ int create_db_header(struct dbheader_t **headerOut) {
 }
 
 int validate_db_header(int fd, struct dbheader_t **headerOut) {
+    if (headerOut == NULL) {
+        printf("Emptry header pointer\n");
+        return STATUS_ERROR;
+    }
+
     if (fd < 0) {
         printf("Bad file descriptor\n");
         return STATUS_ERROR;
@@ -81,7 +86,8 @@ int validate_db_header(int fd, struct dbheader_t **headerOut) {
 
 int add_employee(struct dbheader_t *dbhdr, struct employee_t **employeesOut, char *addstring) {
 
-    if (employeesOut == NULL || *employeesOut == NULL) {
+    // do I need to check if *employeesOut == NULL?
+    if (employeesOut == NULL) {
         printf("Illegal employees pointer\n");
         return STATUS_ERROR;
     }
@@ -110,11 +116,11 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t **employeesOut, cha
         return STATUS_ERROR;
     }
 
-    struct employee_t *newEmployee = *employeesOut;
+    /* struct employee_t *newEmployee = *employeesOut;
     if (newEmployee == NULL) {
         printf("Idk what but something failed\n");
         return STATUS_ERROR;
-    }
+    } */
 
     char *name, *addr, *hours;
 
@@ -131,20 +137,32 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t **employeesOut, cha
         return STATUS_ERROR;
     }
 
-    if (dbhdr->count == 0) {
+    /* if (dbhdr->count == 0) {
         printf("Something is fucky\n");
         return STATUS_ERROR;
+    } */
+
+    struct employee_t *employees;
+    dbhdr->count++; // increment "count" to make space for a new employee
+    if ((employees = reallocarray(*employeesOut, dbhdr->count, (sizeof(struct employee_t)))) == NULL) {
+        perror("reallocarray");
+        printf("Unable to reallocate space for new employee");
+
+        return STATUS_ERROR;
     }
+
+    // size_t is optimized for representing the size of object on target plattform
+    size_t idx = dbhdr->count - 1;
 
     // copy non-null bytes from "name" to "employees" at current array position of "count -1"
     // CAREFULL: strncpy does not automatically append null character to *destination* if *source* >= *destination*
     // how do we guard against missing trailing '\0' ?
-    if ((strlen(strncpy(newEmployee[dbhdr->count - 1].name, name, sizeof(newEmployee[dbhdr->count - 1].name)))) != strlen(name)) {
+    if ((strlen(strncpy(employees[idx].name, name, sizeof(employees[idx].name)))) != strlen(name)) {
         printf("String length mismatch after copy\n");
         return STATUS_ERROR;
     }
 
-    if ((strlen(strncpy(newEmployee[dbhdr->count - 1].address, addr, sizeof(newEmployee[dbhdr->count - 1].address)))) != strlen(addr)) {
+    if ((strlen(strncpy(employees[idx].address, addr, sizeof(employees[idx].address)))) != strlen(addr)) {
         printf("String length mismatch after copy\n");
         return STATUS_ERROR;
     }
@@ -170,9 +188,9 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t **employeesOut, cha
     if (*endptr != '\0') /* Not necessarily an error... */
         printf("Illegal characters after number: \"%s\"\n", endptr);
 
-    newEmployee[dbhdr->count - 1].hours = val;
+    employees[idx].hours = val;
 
-    *employeesOut = newEmployee;
+    *employeesOut = employees;
 
     return STATUS_SUCCESS;
 }
