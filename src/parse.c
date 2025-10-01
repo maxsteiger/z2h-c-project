@@ -84,6 +84,9 @@ int validate_db_header(int fd, struct dbheader_t **headerOut) {
 
 int add_employee(struct dbheader_t *dbhdr, struct employee_t *employees, char *addstring) {
 
+    char *delims = addstring;
+    int count_delims = 0;
+
     if (strlen(addstring) == 0) {
         printf("Nothing to add\n");
         return STATUS_ERROR;
@@ -91,6 +94,17 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t *employees, char *a
 
     if (dbhdr == NULL || employees == NULL) {
         printf("DB-Header or Employee is null\n");
+        return STATUS_ERROR;
+    }
+
+    while ((delims = strpbrk(delims, DELIMITER)) != NULL) {
+        count_delims++; // count amount of delimiters in input string
+        delims++;       // move to next character
+    }
+
+    if (count_delims != 2) {
+        printf("Incorrect employee format to parse!\n");
+        printf("Expected format: \"Name%1$sAddress%1$sWorkHours\"\n", DELIMITER);
         return STATUS_ERROR;
     }
 

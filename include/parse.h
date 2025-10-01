@@ -2,7 +2,7 @@
 #define PARSE_H
 
 #define HEADER_MAGIC 0x4c4c4144 // used to "mark" a db-file which allows us to determine if that file can be processed.
-#define DELIMITER ";"           // choose ";" delimiter because CSV files
+#define DELIMITER ";"           // choose ';' delimiter because CSV files
 
 struct dbheader_t {
     unsigned int magic;
