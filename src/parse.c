@@ -168,7 +168,7 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t **employeesOut, cha
     // copy non-null bytes from "name" to "employees" at current array position of "count -1"
     // CAREFULL: strncpy does not automatically append null character to *destination* if *source* >= *destination*
     // how do we guard against missing trailing '\0' ?
-    if ((strlen(strncpy(employees[idx].name, name, sizeof(employees[idx].name)))) != strlen(name)) {
+    /* if ((strlen(strncpy(employees[idx].name, name, sizeof(employees[idx].name)))) != strlen(name)) {
         printf("String length mismatch after copy\n");
         return STATUS_ERROR;
     }
@@ -176,7 +176,10 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t **employeesOut, cha
     if ((strlen(strncpy(employees[idx].address, addr, sizeof(employees[idx].address)))) != strlen(addr)) {
         printf("String length mismatch after copy\n");
         return STATUS_ERROR;
-    }
+    } */
+
+    strncpy(employees[dbhdr->count - 1].name, name, sizeof(employees[dbhdr->count - 1].name));
+    strncpy(employees[dbhdr->count - 1].address, addr, sizeof(employees[dbhdr->count - 1].address));
 
     char *endptr;
     int val;
