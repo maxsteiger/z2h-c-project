@@ -86,7 +86,7 @@ int validate_db_header(int fd, struct dbheader_t **headerOut) {
 
 int add_employee(struct dbheader_t *dbhdr, struct employee_t **employeesOut, char *addstring) {
 
-    if (*employeesOut == NULL) {
+    if (employeesOut == NULL || *employeesOut == NULL) {
         printf("Illegal employeesOut pointer\n");
         return STATUS_ERROR;
     }
