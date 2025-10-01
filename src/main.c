@@ -75,10 +75,10 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    if (read_employees(dbfd, dbhdr, &employees) != STATUS_SUCCESS) {
+    if (read_employees(dbfd, dbhdr, &employees) == STATUS_ERROR) {
         printf("Failed to read employees\n");
         free(dbhdr);
-        return 0;
+        return STATUS_ERROR;
     }
 
     if (addstring) {
@@ -86,15 +86,23 @@ int main(int argc, char *argv[]) {
         if ((employees = realloc(employees, dbhdr->count * (sizeof(struct employee_t)))) == NULL) {
             perror("realloc");
             printf("Unable to reallocate space for new employee");
+            free(dbhdr);
             free(employees);
             return STATUS_ERROR;
         }
 
-        add_employees(dbhdr, employees, addstring);
+        if (add_employees(dbhdr, employees, addstring) == STATUS_ERROR) {
+            printf("Unable to add employee\n");
+            free(dbhdr);
+            free(employees);
+            return STATUS_ERROR;
+        }
     }
 
     if (output_file(dbfd, dbhdr, employees) == STATUS_ERROR) {
         printf("Unable to create output file\n");
+        free(dbhdr);
+        free(employees);
         return STATUS_ERROR;
     }
 

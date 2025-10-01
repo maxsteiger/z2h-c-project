@@ -83,12 +83,20 @@ int validate_db_header(int fd, struct dbheader_t **headerOut) {
 }
 
 int add_employees(struct dbheader_t *dbhdr, struct employee_t *employees, char *addstring) {
-    char *returnname, *returnaddr;
+
+    if (strlen(addstring) == 0) {
+        printf("Nothing to add\n");
+        return STATUS_ERROR;
+    }
+
+    if (dbhdr == NULL || employees == NULL) {
+        printf("DB-Header or Employee is null\n");
+        return STATUS_ERROR;
+    }
+
     char *name = strtok(addstring, DELIMITER);
     char *addr = strtok(NULL, DELIMITER); // subsequent call when parsing the same string -> param needs to be NULL
     char *hours = strtok(NULL, DELIMITER);
-
-    printf("%s %s %s\n", name, addr, hours);
 
     // copy non-null bytes from "name" to "employees" at current array position of "count -1"
     // CAREFULL: strncpy does not automatically append null character to *destination* if *source* >= *destination*
@@ -113,6 +121,17 @@ int add_employees(struct dbheader_t *dbhdr, struct employee_t *employees, char *
 }
 
 int read_employees(int fd, struct dbheader_t *dbhdr, struct employee_t **employeesOut) {
+
+    if (employeesOut == NULL) {
+        printf("Illegal header pointer\n");
+        return STATUS_ERROR;
+    }
+
+    if (dbhdr == NULL) {
+        printf("DB-Header is null\n");
+        return STATUS_ERROR;
+    }
+
     if (fd < 0) {
         printf("Bad file descriptor\n");
         return STATUS_ERROR;
@@ -143,9 +162,14 @@ int read_employees(int fd, struct dbheader_t *dbhdr, struct employee_t **employe
 }
 
 int output_file(int fd, struct dbheader_t *dbhdr, struct employee_t *employees) {
+
+    if (dbhdr == NULL) {
+        printf("DB-Header is null\n");
+        return STATUS_ERROR;
+    }
+
     if (fd < 0) {
         printf("Bad file descriptor\n");
-        free(dbhdr);
         return STATUS_ERROR;
     }
 
@@ -161,7 +185,6 @@ int output_file(int fd, struct dbheader_t *dbhdr, struct employee_t *employees) 
     if ((write(fd, dbhdr, sizeof(struct dbheader_t)) == -1)) {
         perror("write");
         printf("Unable to write to file\n");
-        free(dbhdr);
         return STATUS_ERROR;
     }
 
@@ -170,7 +193,6 @@ int output_file(int fd, struct dbheader_t *dbhdr, struct employee_t *employees) 
         if ((write(fd, &employees[i], sizeof(struct employee_t)) == -1)) {
             perror("write");
             printf("Failed writing employees at position %d\n", i);
-            free(dbhdr);
             return STATUS_ERROR;
         }
     }
