@@ -71,6 +71,7 @@ int main(int argc, char *argv[]) {
 
         if (validate_db_header(dbfd, &dbhdr) == STATUS_ERROR) {
             printf("Failed to validate database header\n");
+            free(dbhdr);
             return STATUS_ERROR;
         }
     }
@@ -78,6 +79,7 @@ int main(int argc, char *argv[]) {
     if (read_employees(dbfd, dbhdr, &employees) == STATUS_ERROR) {
         printf("Failed to read employees\n");
         free(dbhdr);
+        free(employees);
         return STATUS_ERROR;
     }
 
@@ -91,7 +93,7 @@ int main(int argc, char *argv[]) {
             return STATUS_ERROR;
         }
 
-        if (add_employee(dbhdr, employees, addstring) == STATUS_ERROR) {
+        if (add_employee(dbhdr, &employees, addstring) == STATUS_ERROR) {
             printf("Unable to add employee\n");
             free(dbhdr);
             free(employees);

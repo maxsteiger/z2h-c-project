@@ -42,13 +42,12 @@ int validate_db_header(int fd, struct dbheader_t **headerOut) {
     if (header == NULL) {
         perror("calloc");
         printf("Malloc failed to create db header\n");
-        free(header);
         return STATUS_ERROR;
     }
 
     if (read(fd, header, sizeof(struct dbheader_t)) != sizeof(struct dbheader_t)) {
         perror("read");
-        free(header);
+        printf("Unable to read from file\n");
         return STATUS_ERROR;
     }
 
@@ -60,13 +59,11 @@ int validate_db_header(int fd, struct dbheader_t **headerOut) {
 
     if (header->version != 1) {
         printf("Improper header version\n");
-        free(header);
         return STATUS_ERROR;
     }
 
     if (header->magic != HEADER_MAGIC) {
         printf("Improper header magic\n");
-        free(header);
         return STATUS_ERROR;
     }
 
@@ -74,7 +71,6 @@ int validate_db_header(int fd, struct dbheader_t **headerOut) {
     fstat(fd, &dbstat);
     if (header->filesize != dbstat.st_size) {
         printf("Corrupt database\n");
-        free(header);
         return STATUS_ERROR;
     }
 
@@ -82,20 +78,25 @@ int validate_db_header(int fd, struct dbheader_t **headerOut) {
     return STATUS_SUCCESS;
 }
 
-int add_employee(struct dbheader_t *dbhdr, struct employee_t *employees, char *addstring) {
+int add_employee(struct dbheader_t *dbhdr, struct employee_t **employees, char *addstring) {
 
-    char *delims = addstring;
-    int count_delims = 0;
+    if (employees == NULL) {
+        printf("Illegal employees pointer\n");
+        return STATUS_ERROR;
+    }
 
     if (strlen(addstring) == 0) {
         printf("Nothing to add\n");
         return STATUS_ERROR;
     }
 
-    if (dbhdr == NULL || employees == NULL) {
-        printf("DB-Header or Employee is null\n");
+    if (dbhdr == NULL) {
+        printf("DB-Header is null\n");
         return STATUS_ERROR;
     }
+
+    char *delims = addstring;
+    int count_delims = 0;
 
     while ((delims = strpbrk(delims, DELIMITER)) != NULL) {
         count_delims++; // count amount of delimiters in input string
@@ -108,6 +109,13 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t *employees, char *a
         return STATUS_ERROR;
     }
 
+    struct employee_t *newEmployee = *employees;
+    if (newEmployee == NULL) {
+        perror("calloc");
+        printf("Malloc failed\n");
+        return STATUS_ERROR;
+    }
+
     char *name = strtok(addstring, DELIMITER);
     char *addr = strtok(NULL, DELIMITER); // subsequent call when parsing the same string -> param needs to be NULL
     char *hours = strtok(NULL, DELIMITER);
@@ -115,20 +123,22 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t *employees, char *a
     // copy non-null bytes from "name" to "employees" at current array position of "count -1"
     // CAREFULL: strncpy does not automatically append null character to *destination* if *source* >= *destination*
 
-    if ((strlen(strncpy(employees[dbhdr->count - 1].name, name, sizeof(employees[dbhdr->count - 1].name)))) != strlen(name)) {
+    if ((strlen(strncpy(newEmployee[dbhdr->count - 1].name, name, sizeof(newEmployee[dbhdr->count - 1].name)))) != strlen(name)) {
         printf("String length mismatch after copy\n");
         return STATUS_ERROR;
     }
 
-    if ((strlen(strncpy(employees[dbhdr->count - 1].address, addr, sizeof(employees[dbhdr->count - 1].address)))) != strlen(addr)) {
+    if ((strlen(strncpy(newEmployee[dbhdr->count - 1].address, addr, sizeof(newEmployee[dbhdr->count - 1].address)))) != strlen(addr)) {
         printf("String length mismatch after copy\n");
         return STATUS_ERROR;
     }
 
-    if ((employees[dbhdr->count - 1].hours = atoi(hours)) == 0 && (employees[dbhdr->count - 1].hours != 0)) {
+    if ((newEmployee[dbhdr->count - 1].hours = atoi(hours)) == 0 && (newEmployee[dbhdr->count - 1].hours != 0)) {
         printf("Unable to convert input to string\n");
         return STATUS_ERROR;
     }
+
+    *employees = newEmployee;
 
     return STATUS_SUCCESS;
 }
