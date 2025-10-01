@@ -86,13 +86,12 @@ int validate_db_header(int fd, struct dbheader_t **headerOut) {
 
 int add_employee(struct dbheader_t *dbhdr, struct employee_t **employeesOut, char *addstring) {
 
-    // do I need to check if *employeesOut == NULL?
-    if (employeesOut == NULL) {
-        printf("Illegal employees pointer\n");
+    if (*employeesOut == NULL) {
+        printf("Illegal employeesOut pointer\n");
         return STATUS_ERROR;
     }
 
-    if (strlen(addstring) == 0) {
+    if (addstring == NULL || strlen(addstring) <= 0) {
         printf("Nothing to add\n");
         return STATUS_ERROR;
     }
