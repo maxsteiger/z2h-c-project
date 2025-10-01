@@ -115,7 +115,7 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t **employeesOut, cha
         return STATUS_ERROR;
     }
 
-    char *name, *addr, *hours;
+    /* char *name, *addr, *hours;
 
     if ((name = strtok(addstring, DELIMITER)) == NULL) {
         printf("Name invalid\n");
@@ -128,10 +128,27 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t **employeesOut, cha
     if ((hours = strtok(NULL, DELIMITER)) == NULL) {
         printf("Hours invalid\n");
         return STATUS_ERROR;
+    } */
+
+    char *name = strtok(addstring, ",");
+    if (name == NULL) {
+        printf("Invalid name\n");
+        return STATUS_ERROR;
+    }
+    char *addr = strtok(NULL, ",");
+    if (addr == NULL) {
+        printf("Invalid address\n");
+        return STATUS_ERROR;
+    }
+    char *hours = strtok(NULL, ",");
+    if (hours == NULL) {
+        printf("Invalid hours\n");
+        return STATUS_ERROR;
     }
 
-    struct employee_t *employees;
     dbhdr->count++; // increment "count" to make space for a new employee
+
+    struct employee_t *employees;
     if ((employees = reallocarray(*employeesOut, dbhdr->count, (sizeof(struct employee_t)))) == NULL) {
         perror("reallocarray");
         printf("Unable to reallocate space for new employee");
