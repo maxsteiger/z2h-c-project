@@ -120,6 +120,10 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t **employees, char *
     char *addr = strtok(NULL, DELIMITER); // subsequent call when parsing the same string -> param needs to be NULL
     char *hours = strtok(NULL, DELIMITER);
 
+    if (name == NULL || addr == NULL || hours == NULL) {
+        return STATUS_ERROR;
+    }
+
     // copy non-null bytes from "name" to "employees" at current array position of "count -1"
     // CAREFULL: strncpy does not automatically append null character to *destination* if *source* >= *destination*
 
