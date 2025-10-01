@@ -126,7 +126,6 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t *employees, char *a
     }
 
     if ((employees[dbhdr->count - 1].hours = atoi(hours)) == 0 && (employees[dbhdr->count - 1].hours != 0)) {
-        perror("atoi");
         printf("Unable to convert input to string\n");
         return STATUS_ERROR;
     }
@@ -177,8 +176,8 @@ int read_employees(int fd, struct dbheader_t *dbhdr, struct employee_t **employe
 
 int output_file(int fd, struct dbheader_t *dbhdr, struct employee_t *employees) {
 
-    if (dbhdr == NULL) {
-        printf("DB-Header is null\n");
+    if (dbhdr == NULL || employees == NULL) {
+        printf("DB-Header or Employees null\n");
         return STATUS_ERROR;
     }
 
