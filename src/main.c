@@ -83,7 +83,7 @@ int main(int argc, char *argv[]) {
         return STATUS_ERROR;
     }
 
-    if (addstring) {
+    if (addstring != NULL) {
         dbhdr->count++; // increment "count" to make space for a new employee
         if ((employees = realloc(employees, dbhdr->count * (sizeof(struct employee_t)))) == NULL) {
             perror("realloc");
@@ -94,7 +94,7 @@ int main(int argc, char *argv[]) {
         }
 
         if (add_employee(dbhdr, &employees, addstring) == STATUS_ERROR) {
-            printf("Unable to add employee\n");
+            printf("Unable to add employee: %s\n", addstring);
             free(dbhdr);
             free(employees);
             return STATUS_ERROR;

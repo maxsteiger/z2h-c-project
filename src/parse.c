@@ -1,4 +1,5 @@
 #include <arpa/inet.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -78,9 +79,9 @@ int validate_db_header(int fd, struct dbheader_t **headerOut) {
     return STATUS_SUCCESS;
 }
 
-int add_employee(struct dbheader_t *dbhdr, struct employee_t **employees, char *addstring) {
+int add_employee(struct dbheader_t *dbhdr, struct employee_t **employeesOut, char *addstring) {
 
-    if (employees == NULL) {
+    if (employeesOut == NULL || *employeesOut == NULL) {
         printf("Illegal employees pointer\n");
         return STATUS_ERROR;
     }
@@ -109,24 +110,35 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t **employees, char *
         return STATUS_ERROR;
     }
 
-    struct employee_t *newEmployee = *employees;
+    struct employee_t *newEmployee = *employeesOut;
     if (newEmployee == NULL) {
-        perror("calloc");
-        printf("Malloc failed\n");
+        printf("Idk what but something failed\n");
         return STATUS_ERROR;
     }
 
-    char *name = strtok(addstring, DELIMITER);
-    char *addr = strtok(NULL, DELIMITER); // subsequent call when parsing the same string -> param needs to be NULL
-    char *hours = strtok(NULL, DELIMITER);
+    char *name, *addr, *hours;
 
-    if (name == NULL || addr == NULL || hours == NULL) {
+    if ((name = strtok(addstring, DELIMITER)) == NULL) {
+        printf("Name invalid\n");
+        return STATUS_ERROR;
+    }
+    if ((addr = strtok(NULL, DELIMITER)) == NULL) { // subsequent call when parsing the same string -> param needs to be NULL
+        printf("Address invalid\n");
+        return STATUS_ERROR;
+    }
+    if ((hours = strtok(NULL, DELIMITER)) == NULL) {
+        printf("Hours invalid\n");
+        return STATUS_ERROR;
+    }
+
+    if (dbhdr->count == 0) {
+        printf("Something is fucky\n");
         return STATUS_ERROR;
     }
 
     // copy non-null bytes from "name" to "employees" at current array position of "count -1"
     // CAREFULL: strncpy does not automatically append null character to *destination* if *source* >= *destination*
-
+    // how do we guard against missing trailing '\0' ?
     if ((strlen(strncpy(newEmployee[dbhdr->count - 1].name, name, sizeof(newEmployee[dbhdr->count - 1].name)))) != strlen(name)) {
         printf("String length mismatch after copy\n");
         return STATUS_ERROR;
@@ -137,12 +149,30 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t **employees, char *
         return STATUS_ERROR;
     }
 
-    if ((newEmployee[dbhdr->count - 1].hours = atoi(hours)) == 0 && (newEmployee[dbhdr->count - 1].hours != 0)) {
-        printf("Unable to convert input to string\n");
+    char *endptr;
+    int val;
+    errno = 0; // needed so we can check for strtol failure
+    if ((val = strtol(hours, &endptr, 10)) < 0) {
+        printf("Can't input negative numbers\n");
+        return STATUS_ERROR;
+    }
+    if (errno == ERANGE) { // checks if error occured in strtol
+        perror("strtol");
+        printf("String conversion to long failed\n");
         return STATUS_ERROR;
     }
 
-    *employees = newEmployee;
+    if (endptr == hours) {
+        printf("No digits found in %s\n", hours);
+        return STATUS_ERROR;
+    }
+
+    if (*endptr != '\0') /* Not necessarily an error... */
+        printf("Illegal characters after number: \"%s\"\n", endptr);
+
+    newEmployee[dbhdr->count - 1].hours = val;
+
+    *employeesOut = newEmployee;
 
     return STATUS_SUCCESS;
 }
