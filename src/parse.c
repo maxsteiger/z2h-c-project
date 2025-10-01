@@ -132,6 +132,11 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t **employeesOut, cha
         return STATUS_ERROR;
     }
 
+    if (strlen(name) == 0 || strlen(addr) == 0 || strlen(hours) == 0) {
+        printf("Employee fields can't be empty\n");
+        return STATUS_ERROR;
+    }
+
     dbhdr->count++; // increment "count" to make space for a new employee
 
     struct employee_t *employees;
@@ -183,7 +188,7 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t **employeesOut, cha
 
     *employeesOut = employees;
 
-    printf("Added Employee %lu: %s\n", idx, name);
+    printf("Added Employee Nr. %lu: %s\n", idx + 1, name);
 
     return STATUS_SUCCESS;
 }
