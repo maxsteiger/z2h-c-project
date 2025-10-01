@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
     bool newfile = false;
     int c;
 
-    int dbfd = STATUS_ERROR;
+    int dbfd = -1;
     struct dbheader_t *dbhdr = NULL;
     struct employee_t *employees = NULL;
 
@@ -82,14 +82,28 @@ int main(int argc, char *argv[]) {
     }
 
     if (addstring) {
+        dbhdr->count++; // increment "count" to make space for a new employee
+        if ((employees = realloc(employees, dbhdr->count * (sizeof(struct employee_t)))) == NULL) {
+            perror("realloc");
+            printf("Unable to reallocate space for new employee");
+            free(employees);
+            return STATUS_ERROR;
+        }
+
         add_employees(dbhdr, employees, addstring);
     }
 
-    output_file(dbfd, dbhdr, employees);
+    if (output_file(dbfd, dbhdr, employees) == STATUS_ERROR) {
+        printf("Unable to create output file\n");
+        return STATUS_ERROR;
+    }
+
+    if (dbfd != -1) {
+        close_db_file(&dbfd);
+    }
 
     free(dbhdr);
-    if (dbfd != STATUS_ERROR) {
-        close(dbfd);
-    }
-    return 0;
+    free(employees);
+
+    return STATUS_SUCCESS;
 }

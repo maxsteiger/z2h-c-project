@@ -35,3 +35,13 @@ int open_db_file(char *filename) {
 
     return fd;
 }
+
+int close_db_file(int *file) {
+
+    if (close(*file) == -1) {
+        perror("close");
+        return STATUS_ERROR;
+    }
+
+    return STATUS_SUCCESS;
+}
