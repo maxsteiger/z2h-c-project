@@ -15,7 +15,7 @@ int create_db_header(struct dbheader_t **headerOut) {
         printf("Illegal header pointer\n");
         return STATUS_ERROR;
     }
-    // allocate & init memory the size of 1 member of struct dbheader_t which allows us to return the pointer to allocated space
+    // allocate & init memory the size of 1 member of struct dbheader_t which allows us to return a pointer to allocated space
     struct dbheader_t *header = calloc(1, sizeof(struct dbheader_t));
     if (header == NULL) {
         perror("calloc");
@@ -153,12 +153,12 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t **employeesOut, cha
     // copy non-null bytes from "name" to "employees" at current array position of "count -1"
     // CAREFULL: strncpy does not automatically append null character to *destination* if *source* >= *destination*
     // how do we guard against missing trailing '\0' ?
-    if ((strlen(strncpy(employees[idx].name, name, sizeof(employees[idx].name)))) != strlen(name)) {
+    if ((strlen(strncpy(employees[idx].name, name, sizeof(employees[idx].name) - 1))) != strlen(name)) {
         printf("String length mismatch after copy\n");
         return STATUS_ERROR;
     }
 
-    if ((strlen(strncpy(employees[idx].address, addr, sizeof(employees[idx].address)))) != strlen(addr)) {
+    if ((strlen(strncpy(employees[idx].address, addr, sizeof(employees[idx].address) - 1))) != strlen(addr)) {
         printf("String length mismatch after copy\n");
         return STATUS_ERROR;
     }
