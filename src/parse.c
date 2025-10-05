@@ -123,7 +123,7 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t **employeesOut, cha
         printf("Name invalid\n");
         return STATUS_ERROR;
     }
-    if ((addr = strtok(NULL, DELIMITER)) == NULL) { // subsequent call when parsing the same string -> param needs to be NULL
+    if ((addr = strtok(NULL, DELIMITER)) == NULL) { // subsequent call to 'strtok()' when parsing the same string -> param needs to be NULL
         printf("Address invalid\n");
         return STATUS_ERROR;
     }
@@ -137,17 +137,19 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t **employeesOut, cha
         return STATUS_ERROR;
     }
 
+    printf("%d\n", dbhdr->count);
     dbhdr->count++; // increment "count" to make space for a new employee
 
-    struct employee_t *employees;
-    if ((employees = reallocarray(*employeesOut, dbhdr->count, (sizeof(struct employee_t)))) == NULL) {
+    printf("employeesOut allocated at: %p\n", *&employeesOut);
+    struct employee_t *employees = NULL;
+    employees = reallocarray(*employeesOut, dbhdr->count, sizeof(struct employee_t));
+    if (employees == NULL) {
         perror("reallocarray");
         printf("Unable to reallocate space for new employee");
-
         return STATUS_ERROR;
     }
 
-    // size_t is optimized for representing the size of object on target plattform
+    // size_t is an optimized type for representing the size of an object on current target plattform
     size_t idx = dbhdr->count - 1;
 
     // copy non-null bytes from "name" to "employees" at current array position of "count -1"
@@ -186,9 +188,21 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t **employeesOut, cha
 
     employees[idx].hours = val;
 
+    printf("allocated at: %p\n", &employees);
+    printf("employeesOut allocated at: %p\n", *&employeesOut);
+    int lenEmployees = sizeof(*employees) / sizeof(employees[0]);
+    int lenEmployeesOut = sizeof(employeesOut) / sizeof(employeesOut[0]);
+
+    for (int i = 0; i < dbhdr->count; i++) {
+        printf("values in 'employees': \"%s,%s,%d\" length: %d\n", employees[i].name, employees[i].address, employees[i].hours,
+               lenEmployees);
+        printf("values in 'employeesOut' from parse:\n\t\"%s,%s,%d\" length: %d\n", employeesOut[i]->name, employeesOut[i]->address,
+               employeesOut[i]->hours, lenEmployeesOut);
+    }
+
     *employeesOut = employees;
 
-    printf("Added Employee Nr. %lu: %s\n", idx + 1, name);
+    printf("Added Employee Nr. %d: %s\n", dbhdr->count, name);
 
     return STATUS_SUCCESS;
 }
@@ -212,6 +226,7 @@ int read_employees(int fd, struct dbheader_t *dbhdr, struct employee_t **employe
 
     int count = dbhdr->count;
 
+    // create buffer in memory to fill with data read from disk
     struct employee_t *employees = calloc(count, sizeof(struct employee_t));
     if (employees == NULL) {
         perror("calloc");
@@ -219,6 +234,7 @@ int read_employees(int fd, struct dbheader_t *dbhdr, struct employee_t **employe
         return STATUS_ERROR;
     }
 
+    // fill buffer with data from file descriptor (disk)
     if ((read(fd, employees, count * sizeof(struct employee_t)) == -1)) {
         perror("read");
         printf("Couldn't read file");
@@ -231,6 +247,13 @@ int read_employees(int fd, struct dbheader_t *dbhdr, struct employee_t **employe
 
     *employeesOut = employees;
 
+    for (int e = 0; e < count; e++) {
+        printf("values in 'read_employees': \"%s,%s,%d\" length: %lu\n", employees[e].name, employees[e].address, employees[e].hours,
+               sizeof(*employees) / sizeof(employees[0]));
+
+        printf("values of 'read_employeesOut': \"%s,%s,%d\" length: %lu\n", employeesOut[e]->name, employeesOut[e]->address,
+               employeesOut[e]->hours, sizeof(employeesOut) / sizeof(*employeesOut[0]));
+    }
     return STATUS_SUCCESS;
 }
 
