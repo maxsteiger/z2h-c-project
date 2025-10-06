@@ -83,33 +83,37 @@ int main(int argc, char *argv[]) {
 
     struct employee_t *employees = NULL; // this will be overwritten inside 'read_employees', with pointer from calloc
 
-    if (read_employees(dbfd, dbheader, &employees) == STATUS_ERROR) {
-        printf("Failed to read employees\n");
-        close_db_file(dbfd);
-        free(dbheader);
-        // free(employees);
-        return STATUS_ERROR;
-    }
-
-    for (int e = 0; e < dbheader->count; e++) {
-        printf("employees after READ in main:\"%s,%s,%d\" length: %lu\n", employees[e].name, employees[e].address, employees[e].hours,
-               sizeof(employees));
-    }
-
     if (addstring != NULL) {
 
-        printf("dbheader count before: %d\n", dbheader->count);
-
-        printf("employees allocated at: %p\n", &employees);
-        if (add_employee(dbheader, &employees, addstring) == STATUS_ERROR) {
-            printf("Unable to add employee: %s\n", addstring);
-            // free(dbheader);
-            // free(employees);
+        if (read_employees(dbfd, dbheader, &employees) == STATUS_ERROR) {
+            printf("Failed to read employees\n");
+            close_db_file(dbfd);
+            free(dbheader);
+            free(employees);
             return STATUS_ERROR;
         }
-        printf("values of 'employees' AFTER add_employee:\n\t\"%s,%s,%d\" length: %lu\n", employees->name, employees->address,
-               employees->hours, sizeof(employees));
-        printf("dbheader count after: %d\n", dbheader->count);
+
+        for (int e = 0; e < dbheader->count; e++) {
+            printf("employees after READ in main:\"%s,%s,%d\" length: %lu\n", employees[e].name, employees[e].address, employees[e].hours,
+                   sizeof(employees));
+        }
+
+        printf("dbheader count before: %d\n", dbheader->count);
+        printf("(main) employees allocated at: %p - length: %lu\n", employees, sizeof *employees);
+
+        if (add_employee(dbheader, &employees, addstring) == STATUS_ERROR) {
+            printf("Unable to add employee: %s\n", addstring);
+            free(dbheader);
+            free(employees);
+            return STATUS_ERROR;
+        }
+        printf("dbheader count %s after: %d\n" CRESET, RED, dbheader->count);
+        printf("(main) employees allocated length AFTER: %lu\n", sizeof *employees);
+
+        for (int e = 0; e < dbheader->count; e++) {
+            printf("values of 'employees' AFTER add_employee:\n\t\"%s,%s,%d\" length: %lu\n", employees[e].name, employees[e].address,
+                   employees[e].hours, sizeof(employees));
+        }
     }
 
     if (output_file(dbfd, dbheader, employees) == STATUS_ERROR) {
@@ -123,8 +127,10 @@ int main(int argc, char *argv[]) {
         close_db_file(dbfd);
     }
 
-    /* free(dbheader);
-    free(employees); */
+    free(dbheader);
+    free(employees);
+    employees = NULL;
+    printf("\n");
 
     return STATUS_SUCCESS;
 }

@@ -18,3 +18,6 @@ $(TARGET): $(OBJ)
 
 obj/%.o: src/%.c
 	gcc -c $< -o $@ -Iinclude -g
+
+
+9ec7a9d3a9347b3bb8087eef575bf6b7939a4dcc

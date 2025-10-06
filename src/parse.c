@@ -88,6 +88,8 @@ int validate_db_header(int fd, struct dbheader_t **headerOut) {
 
 int add_employee(struct dbheader_t *dbhdr, struct employee_t **employeesOut, char *addstring) {
 
+    printf(BLUE);
+
     if (employeesOut == NULL || *employeesOut == NULL) {
         printf("Illegal employeesOut pointer\n");
         return STATUS_ERROR;
@@ -140,14 +142,32 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t **employeesOut, cha
     printf("%d\n", dbhdr->count);
     dbhdr->count++; // increment "count" to make space for a new employee
 
-    printf("employeesOut allocated at: %p\n", *&employeesOut);
-    struct employee_t *employees = NULL;
-    employees = reallocarray(*employeesOut, dbhdr->count, sizeof(struct employee_t));
+    printf("employeesOut allocated at: %p\n", *employeesOut);
+
+    struct employee_t tmp = **employeesOut;
+    struct employee_t *tmps = *employeesOut;
+
+    printf("tmp.name = %s\n", tmp.name);
+    printf("tmp.address = %s\n", tmp.address);
+    printf("tmp.hours = %d\n", tmp.hours);
+
+    printf("tmps.name = %s\n", tmps->name);
+    printf("tmps.address = %s\n", tmps->address);
+    printf("tmps.hours = %d\n", tmps->hours);
+
+    struct employee_t *employees = reallocarray(*employeesOut, dbhdr->count, sizeof(struct employee_t));
     if (employees == NULL) {
         perror("reallocarray");
         printf("Unable to reallocate space for new employee");
+        free(employeesOut);
         return STATUS_ERROR;
     }
+
+    printf("employeesOut address: %p\n", employeesOut);
+    printf("*employeesOut address: %p\n", *employeesOut);
+
+    printf("employees address: %p\n", employees);
+    printf("*employees address: %p\n", &*employees);
 
     // size_t is an optimized type for representing the size of an object on current target plattform
     size_t idx = dbhdr->count - 1;
@@ -155,15 +175,25 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t **employeesOut, cha
     // copy non-null bytes from "name" to "employees" at current array position of "count -1"
     // CAREFULL: strncpy does not automatically append null character to *destination* if *source* >= *destination*
     // how do we guard against missing trailing '\0' ?
-    if ((strlen(strncpy(employees[idx].name, name, sizeof(employees[idx].name) - 1))) != strlen(name)) {
+    /* if ((strlen(strncpy(employeesOut[idx]->name, name, sizeof(employeesOut[idx]->name) - 1))) != strlen(name)) {
         printf("String length mismatch after copy\n");
         return STATUS_ERROR;
     }
 
-    if ((strlen(strncpy(employees[idx].address, addr, sizeof(employees[idx].address) - 1))) != strlen(addr)) {
+    if ((strlen(strncpy(employeesOut[idx]->address, addr, sizeof(employeesOut[idx]->address) - 1))) != strlen(addr)) {
         printf("String length mismatch after copy\n");
         return STATUS_ERROR;
-    }
+    } */
+
+    /* printf("employeesOut.name = %s\n", employeesOut[idx]->name);
+    printf("employeesOut.address = %s\n", employeesOut[idx]->address);
+    printf("employeesOut.hours = %d\n", employeesOut[idx]->hours); */
+
+    strcpy(employees[idx].name, name);
+    strcpy(employees[idx].address, addr);
+
+    printf("employeesOut.name = %s\n", employees[idx].name);
+    printf("employeesOut.address = %s\n", employees[idx].address);
 
     char *endptr;
     int val;
@@ -187,30 +217,34 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t **employeesOut, cha
         printf("Illegal characters after number: \"%s\"\n", endptr);
 
     employees[idx].hours = val;
-
-    printf("allocated at: %p\n", &employees);
-    printf("employeesOut allocated at: %p\n", *&employeesOut);
-    int lenEmployees = sizeof(*employees) / sizeof(employees[0]);
-    int lenEmployeesOut = sizeof(employeesOut) / sizeof(employeesOut[0]);
-
-    for (int i = 0; i < dbhdr->count; i++) {
-        printf("values in 'employees': \"%s,%s,%d\" length: %d\n", employees[i].name, employees[i].address, employees[i].hours,
-               lenEmployees);
-        printf("values in 'employeesOut' from parse:\n\t\"%s,%s,%d\" length: %d\n", employeesOut[i]->name, employeesOut[i]->address,
-               employeesOut[i]->hours, lenEmployeesOut);
-    }
+    printf("employees.hours = %d\n", employees[idx].hours);
 
     *employeesOut = employees;
 
+    for (int i = 0; i < dbhdr->count; i++) {
+        printf("values in 'employees': \"%s,%s,%d\"\n", employees[i].name, employees[i].address, employees[i].hours);
+        printf("values in 'employeesOut' from parse:\n\t\"%s,%s,%d\"\n", employeesOut[i]->name, employeesOut[i]->address,
+               employeesOut[i]->hours);
+    }
+
+    printf("employees allocated at:    %p - length: %lu\n", employees, sizeof(*employees));
+    printf("employeesOut allocated at: %p - length: %lu\n", *employeesOut, sizeof(**employeesOut));
+
+    // *employeesOut = reallocarray(employees, dbhdr->count, sizeof(struct employee_t));
+
     printf("Added Employee Nr. %d: %s\n", dbhdr->count, name);
 
+    // free(employees);
+    printf(CRESET);
     return STATUS_SUCCESS;
 }
 
+/// Will allocate memory and fill with employees read from file
 int read_employees(int fd, struct dbheader_t *dbhdr, struct employee_t **employeesOut) {
+    printf(RED);
 
-    if (employeesOut == NULL) {
-        printf("Illegal header pointer\n");
+    if (fd < 0) {
+        printf("Bad file descriptor\n");
         return STATUS_ERROR;
     }
 
@@ -219,47 +253,65 @@ int read_employees(int fd, struct dbheader_t *dbhdr, struct employee_t **employe
         return STATUS_ERROR;
     }
 
-    if (fd < 0) {
-        printf("Bad file descriptor\n");
+    if (employeesOut == NULL) {
+        printf("Illegal header pointer\n");
+        return STATUS_ERROR;
+    }
+
+    if (*employeesOut != NULL) {
+        printf("employeesOut pointer should be NULL\n");
         return STATUS_ERROR;
     }
 
     int count = dbhdr->count;
 
     // create buffer in memory to fill with data read from disk
-    struct employee_t *employees = calloc(count, sizeof(struct employee_t));
-    if (employees == NULL) {
+    struct employee_t *employeesRead = calloc(count, sizeof(struct employee_t));
+    printf("%lu\n", sizeof(*employeesRead));
+    if (employeesRead == NULL) {
         perror("calloc");
         printf("Malloc failed\n");
         return STATUS_ERROR;
     }
 
+    printf("size after calloc: %lu\n", sizeof *employeesRead);
+
     // fill buffer with data from file descriptor (disk)
-    if ((read(fd, employees, count * sizeof(struct employee_t)) == -1)) {
+    int ret_read = read(fd, employeesRead, (count * sizeof(struct employee_t)));
+    printf("read: %d bytes\n", ret_read);
+    if (ret_read == -1) {
         perror("read");
         printf("Couldn't read file");
         return STATUS_ERROR;
     }
 
     for (int i = 0; i < count; i++) {
-        employees[i].hours = ntohl(employees[i].hours);
+        employeesRead[i].hours = ntohl(employeesRead[i].hours);
     }
 
-    *employeesOut = employees;
+    printf("(read)employeesRead allocated at: %p - length: %lu\n", employeesRead, sizeof(*employeesRead));
+    printf("(read)employeesOut allocated at:  %p - length: %lu\n", employeesOut, sizeof(*employeesOut));
+    printf("(read)employeesOut allocated at:  %p - length: %lu\n", *employeesOut, sizeof(**employeesOut));
+
+    *employeesOut = employeesRead;
+
+    printf("(read)employeesOut allocated at:  %p - length: %lu\n", employeesOut, sizeof(*employeesOut));
+    printf("(read)employeesOut allocated at:  %p - length: %lu\n", *employeesOut, sizeof(**employeesOut));
 
     for (int e = 0; e < count; e++) {
-        printf("values in 'read_employees': \"%s,%s,%d\" length: %lu\n", employees[e].name, employees[e].address, employees[e].hours,
-               sizeof(*employees) / sizeof(employees[0]));
+        printf("values in 'read_employees': \"%s,%s,%d\" length: %lu\n", employeesRead[e].name, employeesRead[e].address,
+               employeesRead[e].hours, sizeof(*employeesRead) / sizeof(struct employee_t));
 
         printf("values of 'read_employeesOut': \"%s,%s,%d\" length: %lu\n", employeesOut[e]->name, employeesOut[e]->address,
-               employeesOut[e]->hours, sizeof(employeesOut) / sizeof(*employeesOut[0]));
+               employeesOut[e]->hours, sizeof(**employeesOut) / sizeof(struct employee_t));
     }
+    printf(CRESET);
     return STATUS_SUCCESS;
 }
 
 int output_file(int fd, struct dbheader_t *dbhdr, struct employee_t *employees) {
 
-    if (dbhdr == NULL || employees == NULL) {
+    if (dbhdr == NULL) {
         printf("DB-Header or Employees null\n");
         return STATUS_ERROR;
     }
@@ -284,16 +336,24 @@ int output_file(int fd, struct dbheader_t *dbhdr, struct employee_t *employees) 
         return STATUS_ERROR;
     }
 
-    for (int i = 0; i < realcount; i++) {
-        employees[i].hours = htonl(employees[i].hours);
-        if ((write(fd, &employees[i], sizeof(struct employee_t)) == -1)) {
-            perror("write");
-            printf("Failed writing employees at position %d\n", i);
-            return STATUS_ERROR;
+    if (employees != NULL) {
+        for (int i = 0; i < realcount; i++) {
+            employees[i].hours = htonl(employees[i].hours);
+            int ret_write = write(fd, &employees[i], sizeof(struct employee_t));
+            if (ret_write == -1) {
+                perror("write");
+                printf("Failed writing employees at position %d\n", i);
+                return STATUS_ERROR;
+            }
+            printf("written: %d\n", ret_write);
         }
     }
 
-    ftruncate(fd, sizeof(struct dbheader_t) + sizeof(struct employee_t) * realcount);
+    if ((ftruncate(fd, sizeof(struct dbheader_t) + (sizeof(struct employee_t) * realcount))) == STATUS_ERROR) {
+        perror("frtuncate");
+        printf("Unable to truncate file\n");
+        return STATUS_ERROR;
+    }
 
     return STATUS_SUCCESS;
 }
