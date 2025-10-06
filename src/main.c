@@ -23,8 +23,6 @@ int main(int argc, char *argv[]) {
     int c;
 
     int dbfd = -1;
-    struct dbheader_t *dbhdr = NULL;
-    struct employee_t *employees = NULL;
 
     while ((c = getopt(argc, argv, "nf:a:")) != -1) {
         switch (c) {
@@ -49,6 +47,8 @@ int main(int argc, char *argv[]) {
         printf("Filepath is required\n");
         print_usage(argv);
     }
+
+    struct dbheader_t *dbhdr = NULL;
 
     if (newfile) {
         dbfd = create_db_file(filepath);
@@ -75,22 +75,34 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    struct employee_t *employees = NULL;
+
     if (read_employees(dbfd, dbhdr, &employees) != STATUS_SUCCESS) {
         printf("Failed to read employees\n");
         free(dbhdr);
+        free(employees);
         return 0;
     }
 
     if (addstring) {
         dbhdr->count++; // increment "count" to make space for a new employee
-        if ((employees = realloc(employees, dbhdr->count * (sizeof(struct employee_t)))) == NULL) {
-            perror("realloc");
-            printf("Unable to reallocate space for new employee");
+        struct employee_t *tmp = reallocarray(employees, dbhdr->count, sizeof(struct employee_t));
+        if (tmp == NULL) {
+            perror("reallocarray");
+            printf("Reallocation failed\n");
+            free(dbhdr);
             free(employees);
             return STATUS_ERROR;
         }
 
-        add_employees(dbhdr, employees, addstring);
+        employees = tmp; // if realloc successfull, use new allocated memory
+
+        if (add_employee(dbhdr, employees, addstring) == STATUS_ERROR) {
+            printf("Unable to add employee\n");
+            free(dbhdr);
+            free(employees);
+            return STATUS_ERROR;
+        }
     }
 
     if (output_file(dbfd, dbhdr, employees) == STATUS_ERROR) {
@@ -104,6 +116,8 @@ int main(int argc, char *argv[]) {
 
     free(dbhdr);
     free(employees);
+    dbhdr = NULL;
+    employees = NULL;
 
     return STATUS_SUCCESS;
 }

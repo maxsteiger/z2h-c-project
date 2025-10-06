@@ -19,7 +19,6 @@ int create_db_header(struct dbheader_t **headerOut) {
     if (header == NULL) {
         perror("calloc");
         printf("Malloc failed to create db header\n");
-        free(header);
         return STATUS_ERROR;
     }
 
@@ -42,13 +41,11 @@ int validate_db_header(int fd, struct dbheader_t **headerOut) {
     if (header == NULL) {
         perror("calloc");
         printf("Malloc failed to create db header\n");
-        free(header);
         return STATUS_ERROR;
     }
 
     if (read(fd, header, sizeof(struct dbheader_t)) != sizeof(struct dbheader_t)) {
         perror("read");
-        free(header);
         return STATUS_ERROR;
     }
 
@@ -60,13 +57,11 @@ int validate_db_header(int fd, struct dbheader_t **headerOut) {
 
     if (header->version != 1) {
         printf("Improper header version\n");
-        free(header);
         return STATUS_ERROR;
     }
 
     if (header->magic != HEADER_MAGIC) {
         printf("Improper header magic\n");
-        free(header);
         return STATUS_ERROR;
     }
 
@@ -74,7 +69,6 @@ int validate_db_header(int fd, struct dbheader_t **headerOut) {
     fstat(fd, &dbstat);
     if (header->filesize != dbstat.st_size) {
         printf("Corrupt database\n");
-        free(header);
         return STATUS_ERROR;
     }
 
@@ -82,13 +76,24 @@ int validate_db_header(int fd, struct dbheader_t **headerOut) {
     return STATUS_SUCCESS;
 }
 
-int add_employees(struct dbheader_t *dbhdr, struct employee_t *employees, char *addstring) {
-    char *returnname, *returnaddr;
+int add_employee(struct dbheader_t *dbhdr, struct employee_t *employees, char *addstring) {
+    if (dbhdr == NULL) {
+        printf("Illegal Header\n");
+        return STATUS_ERROR;
+    }
+    if (employees == NULL) {
+        printf("No Employees\n");
+        return STATUS_ERROR;
+    }
+
     char *name = strtok(addstring, DELIMITER);
     char *addr = strtok(NULL, DELIMITER); // subsequent call when parsing the same string -> param needs to be NULL
     char *hours = strtok(NULL, DELIMITER);
 
-    printf("%s %s %s\n", name, addr, hours);
+    if (!name || !addr || !hours || strlen(name) == 0 || strlen(addr) == 0 || strlen(hours) == 0) {
+        printf("Wrong format for adding employee\n");
+        return STATUS_ERROR;
+    }
 
     // copy non-null bytes from "name" to "employees" at current array position of "count -1"
     // CAREFULL: strncpy does not automatically append null character to *destination* if *source* >= *destination*
@@ -115,6 +120,16 @@ int add_employees(struct dbheader_t *dbhdr, struct employee_t *employees, char *
 int read_employees(int fd, struct dbheader_t *dbhdr, struct employee_t **employeesOut) {
     if (fd < 0) {
         printf("Bad file descriptor\n");
+        return STATUS_ERROR;
+    }
+
+    if (dbhdr == 0) {
+        printf("Illegal Header\n");
+        return STATUS_ERROR;
+    }
+
+    if (employeesOut == NULL) {
+        printf("No employees");
         return STATUS_ERROR;
     }
 
@@ -145,7 +160,6 @@ int read_employees(int fd, struct dbheader_t *dbhdr, struct employee_t **employe
 int output_file(int fd, struct dbheader_t *dbhdr, struct employee_t *employees) {
     if (fd < 0) {
         printf("Bad file descriptor\n");
-        free(dbhdr);
         return STATUS_ERROR;
     }
 
@@ -161,7 +175,6 @@ int output_file(int fd, struct dbheader_t *dbhdr, struct employee_t *employees) 
     if ((write(fd, dbhdr, sizeof(struct dbheader_t)) == -1)) {
         perror("write");
         printf("Unable to write to file\n");
-        free(dbhdr);
         return STATUS_ERROR;
     }
 
@@ -170,7 +183,6 @@ int output_file(int fd, struct dbheader_t *dbhdr, struct employee_t *employees) 
         if ((write(fd, &employees[i], sizeof(struct employee_t)) == -1)) {
             perror("write");
             printf("Failed writing employees at position %d\n", i);
-            free(dbhdr);
             return STATUS_ERROR;
         }
     }
