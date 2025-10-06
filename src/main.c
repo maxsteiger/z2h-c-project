@@ -12,6 +12,7 @@ void print_usage(char *argv[]) {
     printf("Usage: %s -n -f <database file>\n", argv[0]);
     printf("\t -n  - create new database file\n");
     printf("\t -f  - (required) path to database file\n");
+    printf("\t -a  - add new employee <name,adress,workhours>\n");
     return;
 }
 
@@ -20,11 +21,12 @@ int main(int argc, char *argv[]) {
     char *filepath = NULL;
     char *addstring = NULL;
     bool newfile = false;
+    bool list = false;
     int c;
 
     int dbfd = -1;
 
-    while ((c = getopt(argc, argv, "nf:a:")) != -1) {
+    while ((c = getopt(argc, argv, "nf:a:l")) != -1) {
         switch (c) {
         case 'n':
             newfile = true;
@@ -34,6 +36,9 @@ int main(int argc, char *argv[]) {
             break;
         case 'a':
             addstring = optarg;
+            break;
+        case 'l':
+            list = true;
             break;
         case '?':
             printf("Unknown option -%c\n", c);
@@ -46,6 +51,8 @@ int main(int argc, char *argv[]) {
     if (filepath == NULL) {
         printf("Filepath is required\n");
         print_usage(argv);
+
+        return STATUS_SUCCESS;
     }
 
     struct dbheader_t *dbhdr = NULL;
@@ -81,7 +88,7 @@ int main(int argc, char *argv[]) {
         printf("Failed to read employees\n");
         free(dbhdr);
         free(employees);
-        return 0;
+        return STATUS_ERROR;
     }
 
     if (addstring) {
@@ -103,6 +110,10 @@ int main(int argc, char *argv[]) {
             free(employees);
             return STATUS_ERROR;
         }
+    }
+
+    if (list) {
+        list_employees(dbhdr, employees);
     }
 
     if (output_file(dbfd, dbhdr, employees) == STATUS_ERROR) {
