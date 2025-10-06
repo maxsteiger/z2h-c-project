@@ -76,13 +76,23 @@ int validate_db_header(int fd, struct dbheader_t **headerOut) {
     return STATUS_SUCCESS;
 }
 
-int add_employee(struct dbheader_t *dbhdr, struct employee_t *employees, char *addstring) {
+int add_employee(struct dbheader_t *dbhdr, struct employee_t **employeesOut, char *addstring) {
     if (dbhdr == NULL) {
         printf("Illegal Header\n");
         return STATUS_ERROR;
     }
-    if (employees == NULL) {
+    if (employeesOut == NULL || *employeesOut == NULL) {
         printf("No Employees\n");
+        return STATUS_ERROR;
+    }
+
+    dbhdr->count++; // increment "count" to make space for a new employee
+    struct employee_t *employees = reallocarray(*employeesOut, dbhdr->count, sizeof(struct employee_t));
+    if (employees == NULL) {
+        perror("reallocarray");
+        printf("Reallocation failed\n");
+        free(dbhdr);
+        free(employeesOut);
         return STATUS_ERROR;
     }
 
@@ -95,24 +105,26 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t *employees, char *a
         return STATUS_ERROR;
     }
 
+    int idx = dbhdr->count - 1;
     // copy non-null bytes from "name" to "employees" at current array position of "count -1"
     // CAREFULL: strncpy does not automatically append null character to *destination* if *source* >= *destination*
 
-    if ((strlen(strncpy(employees[dbhdr->count - 1].name, name, sizeof(employees[dbhdr->count - 1].name)))) != strlen(name)) {
+    if ((strlen(strncpy(employees[idx].name, name, sizeof(employees[idx].name)))) != strlen(name)) {
         printf("String length mismatch after copy\n");
         return STATUS_ERROR;
     }
 
-    if ((strlen(strncpy(employees[dbhdr->count - 1].address, addr, sizeof(employees[dbhdr->count - 1].address)))) != strlen(addr)) {
+    if ((strlen(strncpy(employees[idx].address, addr, sizeof(employees[idx].address)))) != strlen(addr)) {
         printf("String length mismatch after copy\n");
         return STATUS_ERROR;
     }
 
-    if ((employees[dbhdr->count - 1].hours = atoi(hours)) == 0 && (employees[dbhdr->count - 1].hours != 0)) {
-        perror("atoi");
-        printf("Unable to convert input to string\n");
-        return STATUS_ERROR;
-    }
+    employees[idx].hours = atoi(hours);
+
+    printf("Successfully added Employee %d: \n", dbhdr->count);
+    printf("%s, %s, %d\n", employees[idx].name, employees[idx].address, employees[idx].hours);
+
+    *employeesOut = employees;
 
     return STATUS_SUCCESS;
 }
@@ -128,8 +140,8 @@ int read_employees(int fd, struct dbheader_t *dbhdr, struct employee_t **employe
         return STATUS_ERROR;
     }
 
-    if (employeesOut == NULL || *employeesOut == NULL) {
-        printf("No employees");
+    if (employeesOut == NULL) {
+        printf("No employees\n");
         return STATUS_ERROR;
     }
 
@@ -144,7 +156,7 @@ int read_employees(int fd, struct dbheader_t *dbhdr, struct employee_t **employe
 
     if ((read(fd, employees, count * sizeof(struct employee_t)) == -1)) {
         perror("read");
-        printf("Couldn't read file");
+        printf("Couldn't read file\n");
         return STATUS_ERROR;
     }
 

@@ -92,19 +92,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (addstring) {
-        dbhdr->count++; // increment "count" to make space for a new employee
-        struct employee_t *tmp = reallocarray(employees, dbhdr->count, sizeof(struct employee_t));
-        if (tmp == NULL) {
-            perror("reallocarray");
-            printf("Reallocation failed\n");
-            free(dbhdr);
-            free(employees);
-            return STATUS_ERROR;
-        }
-
-        employees = tmp; // if realloc successfull, use new allocated memory
-
-        if (add_employee(dbhdr, employees, addstring) == STATUS_ERROR) {
+        if (add_employee(dbhdr, &employees, addstring) == STATUS_ERROR) {
             printf("Unable to add employee\n");
             free(dbhdr);
             free(employees);
