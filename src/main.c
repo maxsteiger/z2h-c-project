@@ -98,6 +98,7 @@ int main(int argc, char *argv[]) {
             free(employees);
             return STATUS_ERROR;
         }
+        dbhdr->count++;
     }
 
     if (list) {
