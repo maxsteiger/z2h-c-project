@@ -128,7 +128,7 @@ int read_employees(int fd, struct dbheader_t *dbhdr, struct employee_t **employe
         return STATUS_ERROR;
     }
 
-    if (employeesOut == NULL) {
+    if (employeesOut == NULL || *employeesOut == NULL) {
         printf("No employees");
         return STATUS_ERROR;
     }
