@@ -81,8 +81,12 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t **employeesOut, cha
         printf("Illegal Header\n");
         return STATUS_ERROR;
     }
-    if (employeesOut == NULL || *employeesOut == NULL || &*employeesOut == NULL) {
+    if (employeesOut == NULL || *employeesOut == NULL) {
         printf("No Employees\n");
+        return STATUS_ERROR;
+    }
+    if (!addstring) {
+        printf("Somehow addstring still empty\n");
         return STATUS_ERROR;
     }
 
@@ -101,7 +105,7 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t **employeesOut, cha
     }
 
     char *name = strtok(addstring, DELIMITER);
-    char *addr = strtok(NULL, DELIMITER); // subsequent call when parsing the same string -> param needs to be NULL
+    char *addr = strtok(NULL, DELIMITER); // subsequent call when parsing string "s" needs that same string "s" to be NULL
     char *hours = strtok(NULL, DELIMITER);
 
     if (!name || !addr || !hours || strlen(name) == 0 || strlen(addr) == 0 || strlen(hours) == 0) {
