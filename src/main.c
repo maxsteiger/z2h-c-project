@@ -8,11 +8,28 @@
 #include "file.h"
 #include "parse.h"
 
+void free_pointers(struct dbheader_t *dbhdr, struct employee_t *employees) {
+
+    if (dbhdr != NULL) {
+        printf("Free dbheader\n");
+        free(dbhdr);
+        dbhdr = NULL;
+    }
+
+    if (employees != NULL) {
+        printf("Free employees\n");
+        free(employees);
+        employees = NULL;
+    }
+
+    return;
+}
+
 void print_usage(char *argv[]) {
     printf("Usage: %s -n -f <database file>\n", argv[0]);
     printf("\t -n  - create new database file\n");
     printf("\t -f  - (required) path to database file\n");
-    printf("\t -a  - add new employee <name,adress,workhours>\n");
+    printf("\t -a  - add new employee in format: \"Name%1$sAddress%1$sWorkHours\"\n", DELIMITER);
     return;
 }
 
@@ -86,19 +103,20 @@ int main(int argc, char *argv[]) {
 
     if (read_employees(dbfd, dbhdr, &employees) != STATUS_SUCCESS) {
         printf("Failed to read employees\n");
-        free(dbhdr);
-        free(employees);
+        free_pointers(dbhdr, employees);
         return STATUS_ERROR;
     }
 
     if (addstring) {
         if (add_employee(dbhdr, &employees, addstring) == STATUS_ERROR) {
             printf("Unable to add employee\n");
-            free(dbhdr);
-            free(employees);
+            free_pointers(dbhdr, employees);
             return STATUS_ERROR;
         }
-        dbhdr->count++;
+
+        printf("%d\n", dbhdr->count);
+        printf("(main): %s %s %d\n", employees[dbhdr->count - 1].name, employees[dbhdr->count - 1].address,
+               employees[dbhdr->count - 1].hours);
     }
 
     if (list) {
@@ -114,10 +132,7 @@ int main(int argc, char *argv[]) {
         close_db_file(&dbfd);
     }
 
-    free(dbhdr);
-    free(employees);
-    dbhdr = NULL;
-    employees = NULL;
+    free_pointers(dbhdr, employees);
 
     return STATUS_SUCCESS;
 }

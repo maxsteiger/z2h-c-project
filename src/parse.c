@@ -86,13 +86,17 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t **employeesOut, cha
         return STATUS_ERROR;
     }
 
-    dbhdr->count++; // increment "count" to make space for a new employee
-    struct employee_t *employees = reallocarray(*employeesOut, dbhdr->count, sizeof(struct employee_t));
-    if (employees == NULL) {
-        perror("reallocarray");
-        printf("Reallocation failed\n");
-        free(dbhdr);
-        free(employeesOut);
+    char *delims = addstring;
+    int count_delims = 0;
+
+    while ((delims = strpbrk(delims, DELIMITER)) != NULL) {
+        count_delims++; // count amount of delimiters in input string
+        delims++;       // move to next character
+    }
+
+    if (count_delims != 2) {
+        printf("Incorrect employee format to parse!\n");
+        printf("Expected format: \"Name%1$sAddress%1$sWorkHours\"\n", DELIMITER);
         return STATUS_ERROR;
     }
 
@@ -102,6 +106,14 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t **employeesOut, cha
 
     if (!name || !addr || !hours || strlen(name) == 0 || strlen(addr) == 0 || strlen(hours) == 0) {
         printf("Wrong format for adding employee\n");
+        return STATUS_ERROR;
+    }
+
+    dbhdr->count++; // increment "count" to make space for a new employee
+    struct employee_t *employees = reallocarray(*employeesOut, dbhdr->count, sizeof(struct employee_t));
+    if (employees == NULL) {
+        perror("reallocarray");
+        printf("Reallocation failed\n");
         return STATUS_ERROR;
     }
 
@@ -122,9 +134,14 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t **employeesOut, cha
     employees[idx].hours = atoi(hours);
 
     printf("Successfully added Employee %d: \n", dbhdr->count);
-    printf("%s, %s, %d\n", employees[idx].name, employees[idx].address, employees[idx].hours);
+    printf("(parse): %s %s %d\n", employees[idx].name, employees[idx].address, employees[idx].hours);
+
+    printf("%p\n", &employees);
+    printf("%p\n", &*employeesOut);
 
     *employeesOut = employees;
+
+    printf("%p\n", &*employeesOut);
 
     return STATUS_SUCCESS;
 }
