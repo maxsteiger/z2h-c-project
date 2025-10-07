@@ -81,7 +81,7 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t **employeesOut, cha
         printf("Illegal Header\n");
         return STATUS_ERROR;
     }
-    if (employeesOut == NULL || *employeesOut == NULL) {
+    if (employeesOut == NULL || *employeesOut == NULL || &*employeesOut == NULL) {
         printf("No Employees\n");
         return STATUS_ERROR;
     }
