@@ -121,7 +121,10 @@ int main(int argc, char *argv[]) {
     }
 
     if (list) {
-        list_employees(dbhdr, employees);
+        if (list_employees(dbhdr, employees) == STATUS_ERROR) {
+            printf("Unable to read and list employees\n");
+            return STATUS_ERROR;
+        }
     }
 
     if (output_file(dbfd, dbhdr, employees) == STATUS_ERROR) {
