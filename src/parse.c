@@ -75,7 +75,8 @@ int validate_db_header(int fd, struct dbheader_t **headerOut) {
     *headerOut = header;
     return STATUS_SUCCESS;
 }
-
+// *dbhdr         -> pointer to populated db header struct
+// **employeesOut -> double pointer to a list of employees (employee struct)
 int add_employee(struct dbheader_t *dbhdr, struct employee_t **employeesOut, char *addstring) {
     if (dbhdr == NULL) {
         printf("Illegal Header\n");
@@ -113,39 +114,44 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t **employeesOut, cha
         return STATUS_ERROR;
     }
 
-    dbhdr->count++; // increment "count" to make space for a new employee
-    struct employee_t *employees = reallocarray(*employeesOut, dbhdr->count, sizeof(struct employee_t));
+    struct employee_t *employees = reallocarray(*employeesOut, dbhdr->count + 1, sizeof(struct employee_t));
+    /* struct employee_t *employees = *employeesOut;
+    employees = reallocarray(employees, dbhdr->count + 1, sizeof(struct employee_t)); */
     if (employees == NULL) {
         perror("reallocarray");
         printf("Reallocation failed\n");
         return STATUS_ERROR;
     }
+    dbhdr->count++; // after allocating more memory, increment "count" to make space for a new employee
 
     int idx = dbhdr->count - 1;
     // copy non-null bytes from "name" to "employees" at current array position of "count -1"
     // CAREFULL: strncpy does not automatically append null character to *destination* if *source* >= *destination*
-
-    if ((strlen(strncpy(employees[idx].name, name, sizeof(employees[idx].name)))) != strlen(name)) {
+    if ((strlen(strncpy(employees[idx].name, name, sizeof(employees[idx].name) - 1))) != strlen(name)) {
         printf("String length mismatch after copy\n");
         return STATUS_ERROR;
     }
 
-    if ((strlen(strncpy(employees[idx].address, addr, sizeof(employees[idx].address)))) != strlen(addr)) {
+    if ((strlen(strncpy(employees[idx].address, addr, sizeof(employees[idx].address) - 1))) != strlen(addr)) {
         printf("String length mismatch after copy\n");
         return STATUS_ERROR;
     }
+
+    // leave space for null-terminator by copying size of field -1
+    /* strncpy(employees[idx].name, name, sizeof(employees[idx].name) - 1);
+    strncpy(employees[idx].address, addr, sizeof(employees[idx].address) - 1); */
 
     employees[idx].hours = atoi(hours);
 
     printf("Successfully added Employee %d: \n", dbhdr->count);
-    printf("(parse): %s %s %d\n", employees[idx].name, employees[idx].address, employees[idx].hours);
+    // printf("(parse): %s %s %d\n", employees[idx].name, employees[idx].address, employees[idx].hours);
 
-    printf("%p\n", &employees);
-    printf("%p\n", &*employeesOut);
+    /* printf("%p\n", &employees);
+    printf("%p\n", &*employeesOut); */
 
     *employeesOut = employees;
 
-    printf("%p\n", &*employeesOut);
+    // printf("%p\n", &*employeesOut);
 
     return STATUS_SUCCESS;
 }

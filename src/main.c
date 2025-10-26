@@ -29,6 +29,7 @@ void print_usage(char *argv[]) {
     printf("Usage: %s -n -f <database file>\n", argv[0]);
     printf("\t -n  - create new database file\n");
     printf("\t -f  - (required) path to database file\n");
+    printf("\t -l  - list the employees\n");
     printf("\t -a  - add new employee in format: \"Name%1$sAddress%1$sWorkHours\"\n", DELIMITER);
     return;
 }
@@ -114,9 +115,9 @@ int main(int argc, char *argv[]) {
             return STATUS_ERROR;
         }
 
-        printf("%d\n", dbhdr->count);
+        /* printf("%d\n", dbhdr->count);
         printf("(main): %s %s %d\n", employees[dbhdr->count - 1].name, employees[dbhdr->count - 1].address,
-               employees[dbhdr->count - 1].hours);
+               employees[dbhdr->count - 1].hours); */
     }
 
     if (list) {
